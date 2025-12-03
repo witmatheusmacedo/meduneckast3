@@ -1,0 +1,631 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="style.css">
+
+  <!-- SEO básico -->
+  <title>www.axolândia.com.br</title>
+  <meta name="description" content="Descubra o mundo real dos axolotes: biologia, habitat, curiosidades, conservação e muito mais." />
+
+  <!-- Bibliotecas -->
+  <script defer src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.8.0/dist/tf.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+
+  <!-- Estilo extra só para os componentes novos deste tema -->
+  <style>
+    /* Seção de badges no hero (info científica rápida) */
+    .axo-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin: 1rem 0 0.5rem;
+      padding: 0;
+      list-style: none;
+    }
+
+    .axo-badge {
+      font-size: 0.8rem;
+      padding: 0.35rem 0.75rem;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      background: rgba(4, 47, 74, 0.7);
+      backdrop-filter: blur(6px);
+      color: #f1f5f9;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      white-space: nowrap;
+    }
+
+    .axo-badge span.icon {
+      font-size: 0.9rem;
+    }
+
+    .axo-badge--danger {
+      background: rgba(127, 29, 29, 0.85);
+      border-color: rgba(252, 165, 165, 0.35);
+    }
+
+    .axo-badge--habitat {
+      background: rgba(15, 118, 110, 0.8);
+      border-color: rgba(45, 212, 191, 0.4);
+    }
+
+    .axo-badge--science {
+      background: rgba(69, 10, 105, 0.8);
+      border-color: rgba(233, 213, 255, 0.4);
+    }
+
+    /* Seção linha do tempo (realista, foco biológico) */
+    .axo-timeline-section {
+      margin-top: 3rem;
+      padding: 2.5rem 1.5rem;
+      border-radius: 1.5rem;
+      background: radial-gradient(circle at top, #0f172a 0, #020617 55%, #020617 100%);
+      color: #e2e8f0;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .axo-timeline-section header p {
+      color: #cbd5f5;
+      max-width: 42rem;
+    }
+
+    .axo-timeline-section::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      opacity: 0.25;
+      background:
+        radial-gradient(circle at 10% 20%, rgba(59, 130, 246, 0.35) 0, transparent 55%),
+        radial-gradient(circle at 80% 80%, rgba(45, 212, 191, 0.3) 0, transparent 55%);
+      pointer-events: none;
+    }
+
+    .axo-timeline {
+      position: relative;
+      margin-top: 1.75rem;
+      display: grid;
+      gap: 1.5rem;
+      z-index: 1;
+    }
+
+    @media (min-width: 768px) {
+      .axo-timeline {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+    }
+
+    .axo-timeline-item {
+      position: relative;
+      padding: 1.25rem 1rem;
+      border-radius: 1rem;
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      box-shadow: 0 18px 45px rgba(15, 23, 42, 0.8);
+      backdrop-filter: blur(8px);
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .axo-timeline-item h3 {
+      font-size: 0.95rem;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      color: #e5e7eb;
+    }
+
+    .axo-timeline-item p {
+      font-size: 0.85rem;
+      margin: 0;
+      color: #cbd5f5;
+    }
+
+    .axo-timeline-step {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #a5b4fc;
+    }
+
+    .axo-timeline-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 999px;
+      background: #38bdf8;
+      box-shadow: 0 0 0 5px rgba(56, 189, 248, 0.25);
+      flex-shrink: 0;
+    }
+
+    .axo-timeline-item--danger .axo-timeline-dot {
+      background: #f97373;
+      box-shadow: 0 0 0 5px rgba(248, 113, 113, 0.35);
+    }
+
+    /* Pequenas bolhas de fundo em seções oceânicas (só cosmético) */
+    .ocean-bubbles {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+      opacity: 0.16;
+    }
+
+    .ocean-bubbles span {
+      position: absolute;
+      border-radius: 999px;
+      background: radial-gradient(circle, rgba(191, 219, 254, 0.9) 0, transparent 70%);
+      animation: axo-bubble 18s linear infinite;
+    }
+
+    .ocean-bubbles span:nth-child(1) { width: 80px; height: 80px; left: 5%; bottom: -10%; animation-delay: 0s; }
+    .ocean-bubbles span:nth-child(2) { width: 55px; height: 55px; left: 30%; bottom: -15%; animation-delay: 4s; }
+    .ocean-bubbles span:nth-child(3) { width: 45px; height: 45px; left: 60%; bottom: -18%; animation-delay: 8s; }
+    .ocean-bubbles span:nth-child(4) { width: 70px; height: 70px; left: 85%; bottom: -12%; animation-delay: 11s; }
+
+    @keyframes axo-bubble {
+      0% { transform: translateY(0) translateX(0); opacity: 0; }
+      10% { opacity: 1; }
+      100% { transform: translateY(-130vh) translateX(-10px); opacity: 0; }
+    }
+
+    /* Deixar hero um pouco mais "oceânico" sem depender de style.css */
+    .hero {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at top, rgba(15, 23, 42, 0.9) 0, transparent 60%),
+        linear-gradient(to bottom, rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.6));
+      opacity: 0.9;
+      z-index: -2;
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 15% 80%, rgba(56, 189, 248, 0.35) 0, transparent 55%),
+        radial-gradient(circle at 85% 20%, rgba(52, 211, 153, 0.25) 0, transparent 55%);
+      opacity: 0.5;
+      z-index: -1;
+    }
+
+    .hero .imgwrap img {
+      border-radius: 1.25rem;
+      object-fit: cover;
+      max-height: 340px;
+    }
+  </style>
+</head>
+
+<body>
+  <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
+
+  <header role="banner" id="topo">
+    <div class="wrap">
+      <nav aria-label="Navegação principal">
+        <div class="brand" aria-label="Marca da página">
+          <span aria-hidden="true"></span>
+          <strong>Mar Profundo</strong>
+        </div>
+
+        <div class="nav-links" role="navigation">
+          <a href="#curiosidades">Curiosidades</a>
+          <a href="#fatos">Fatos</a>
+          <a href="#linha-tempo">Linha do Tempo</a>
+          <a href="#galeria">Galeria</a>
+          <a href="#faq">FAQ</a>
+        </div>
+
+        <div class="controls">
+          <button id="toggleTheme" class="btn ghost" aria-pressed="false" aria-label="Alternar modo claro e escuro">🌙</button>
+          <button id="btnAbrirChatbot" class="btn" aria-label="Abrir chatbot">Abrir Chatbot</button>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <main id="conteudo" class="wrap" role="main">
+    <!-- HERO -->
+    <section class="hero fade-in" aria-labelledby="titulo-hero">
+      <div>
+        <h1 id="titulo-hero">Axolotes</h1>
+        <h2>Venha descobrir com a gente o que são axolotes!</h2>
+
+        <p>
+          O axolote (<em>Ambystoma mexicanum</em>) é uma salamandra mexicana famosa por ser neotênica, ou seja,
+          por viver a vida inteira em estado larval, mantendo características aquáticas como as brânquias externas
+          e a cauda. Além de carismático, é um dos animais mais importantes para a pesquisa científica em regeneração.
+        </p>
+
+        <!-- Badges com foco realista/científico -->
+        <ul class="axo-badges" aria-label="Informações rápidas sobre axolotes">
+          <li class="axo-badge axo-badge--danger">
+            <span class="icon">⚠️</span>
+            Criticamente ameaçado (IUCN)
+          </li>
+          <li class="axo-badge axo-badge--habitat">
+            <span class="icon">🌎</span>
+            Habitat natural: Lago Xochimilco (México)
+          </li>
+          <li class="axo-badge axo-badge--science">
+            <span class="icon">🧬</span>
+            Modelo de estudo em regeneração
+          </li>
+        </ul>
+
+        <div class="actions" role="group" aria-label="Ações principais">
+          <button id="abrirIA" class="btn" aria-label="Iniciar reconhecimento facial">
+            Reconhecimento Facial
+          </button>
+          <button id="btnAbrirChatbotHero" class="btn ghost" aria-label="Abrir chatbot">
+            Abrir Chatbot
+          </button>
+        </div>
+      </div>
+
+      <div class="imgwrap" aria-hidden="false">
+        <img
+          src="https://www.aquaa3.com.br/wp-content/uploads/2017/05/Axolote-Ambystoma-mexicanum-840x400.jpg"
+          alt="Axolote em seu ambiente aquático, com brânquias externas visíveis."
+        />
+      </div>
+
+      <!-- Bolhas decorativas no fundo -->
+      <div class="ocean-bubbles" aria-hidden="true">
+        <span></span><span></span><span></span><span></span>
+      </div>
+    </section>
+
+    <!-- CURIOSIDADES -->
+    <section id="curiosidades" aria-labelledby="titulo-curiosidades" class="fade-in">
+      <header>
+        <h2 id="titulo-curiosidades">Curiosidades</h2>
+        <p>Descobertas rápidas sobre os axolotes.</p>
+      </header>
+
+      <ul class="facts-list" role="list">
+        <li>
+          <div class="text">
+            Ele é um anfíbio salamandra famoso por sua capacidade de regeneração, sendo capaz de reconstruir
+            membros, partes da medula espinhal, coração e até partes do cérebro.
+          </div>
+        </li>
+        <li>
+          <div class="text">
+            Neotenia: o axolote permanece aquático e em estado larval durante toda a vida, diferente de outras
+            salamandras que se metamorfoseiam e passam a viver em ambiente terrestre.
+          </div>
+        </li>
+        <li>
+          <div class="text">
+            Aparência: possui brânquias plumosas nas laterais da cabeça, cauda longa e uma expressão que lembra
+            um “sorriso”, o que o torna muito carismático.
+          </div>
+        </li>
+        <li>
+          <div class="text">
+            Tamanho: eles podem atingir até 30 cm, embora o mais comum seja entre 23 e 28 cm em cativeiro.
+          </div>
+        </li>
+        <li>
+          <div class="text">
+            Alimentação: são carnívoros, alimentando-se de pequenos animais como insetos, vermes, crustáceos e
+            pequenos peixes.
+          </div>
+        </li>
+      </ul>
+    </section>
+
+    <!-- FATOS SOBRE O AXOLOTE -->
+    <section id="fatos" aria-labelledby="titulo-fatos" class="fade-in">
+      <header>
+        <h2 id="titulo-fatos">Fatos sobre o axolote</h2>
+        <p>Três pontos científicos para entender melhor os axolotes.</p>
+      </header>
+
+      <div class="cards" role="list">
+        <article class="card" aria-label="Fato científico 1" role="listitem">
+          <h3>Eles podem se regenerar?</h3>
+          <p>
+            Sim. Axolotes são anfíbios mexicanos nativos do sistema de canais de Xochimilco e são conhecidos por
+            sua extraordinária capacidade de regenerar membros, cauda, partes de órgãos internos e até estruturas
+            do sistema nervoso central. Por isso, são amplamente estudados em laboratórios ao redor do mundo.
+          </p>
+        </article>
+
+        <article class="card" aria-label="Fato científico 2" role="listitem">
+          <h3>Por que são proibidos no Brasil?</h3>
+          <p>
+            O axolote é proibido no Brasil porque é uma espécie exótica ameaçada de extinção. Sua criação, posse
+            e comércio são considerados crime ambiental, devido ao risco de desequilíbrio ecológico, disseminação
+            de doenças e incentivo ao tráfico de animais. No Brasil, o foco é proteger as espécies nativas.
+          </p>
+        </article>
+
+        <article class="card" aria-label="Fato científico 3" role="listitem">
+          <h3>O que os axolotes são?</h3>
+          <p>
+            O axolote é uma salamandra neotênica: ele mantém características larvais aquáticas durante toda a vida,
+            como as brânquias externas, em vez de passar por metamorfose completa. Isso o torna um caso especial
+            dentro dos anfíbios.
+          </p>
+        </article>
+      </div>
+    </section>
+
+    <!-- LINHA DO TEMPO (REALISTA) -->
+    <section id="linha-tempo" class="axo-timeline-section fade-in" aria-labelledby="titulo-linha-tempo">
+      <header>
+        <h2 id="titulo-linha-tempo">Linha do tempo de um axolote</h2>
+        <p>
+          Apesar de manter a forma “juvenil”, o axolote passa por etapas importantes: do ovo à fase larval aquática
+          e, em alguns casos raros, até uma metamorfose parcial. Aqui está um resumo simples e realista do ciclo.
+        </p>
+      </header>
+
+      <div class="axo-timeline" role="list">
+        <article class="axo-timeline-item" role="listitem">
+          <span class="axo-timeline-step">Etapa 1</span>
+          <h3>
+            <span class="axo-timeline-dot" aria-hidden="true"></span>
+            Ovo
+          </h3>
+          <p>
+            A fêmea deposita centenas de ovos presos à vegetação aquática. Dentro deles, o embrião se desenvolve
+            protegido até a eclosão.
+          </p>
+        </article>
+
+        <article class="axo-timeline-item" role="listitem">
+          <span class="axo-timeline-step">Etapa 2</span>
+          <h3>
+            <span class="axo-timeline-dot" aria-hidden="true"></span>
+            Larva aquática
+          </h3>
+          <p>
+            Após a eclosão, o axolote é uma larva totalmente aquática, com nadadeiras e brânquias externas bem
+            evidentes, alimentando-se de pequenos invertebrados.
+          </p>
+        </article>
+
+        <article class="axo-timeline-item" role="listitem">
+          <span class="axo-timeline-step">Etapa 3</span>
+          <h3>
+            <span class="axo-timeline-dot" aria-hidden="true"></span>
+            Adulto neotênico
+          </h3>
+          <p>
+            Diferente de outras salamandras, o axolote permanece em estado larval, mas atinge a maturidade sexual e
+            continua vivendo na água – é o famoso “adulto com cara de bebê”.
+          </p>
+        </article>
+
+        <article class="axo-timeline-item axo-timeline-item--danger" role="listitem">
+          <span class="axo-timeline-step">Situação atual</span>
+          <h3>
+            <span class="axo-timeline-dot" aria-hidden="true"></span>
+            Espécie ameaçada
+          </h3>
+          <p>
+            A destruição de habitat, poluição e espécies invasoras levaram o axolote à categoria
+            <strong>criticamente ameaçado</strong>. Projetos de conservação tentam recuperar a população
+            em Xochimilco.
+          </p>
+        </article>
+      </div>
+    </section>
+
+    <!-- GALERIA -->
+    <section id="galeria" aria-labelledby="titulo-galeria" class="fade-in">
+      <header>
+        <h2 id="titulo-galeria">Galeria</h2>
+        <p>Imagens relacionadas aos axolotes.</p>
+      </header>
+
+      <div class="gallery" role="list">
+        <figure role="listitem">
+          <img
+            src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSZlUNWp8ypv6cC_hk5jRDPenXCrJ3pe-nKRQ&s"
+            alt="Axolote visto de frente, com brânquias externas bem visíveis."
+          />
+          <figcaption>Possui neotenia, mantendo brânquias na fase adulta.</figcaption>
+        </figure>
+
+        <figure role="listitem">
+          <img
+            src="data:image/jpeg;base64,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"
+            alt="Axolote observado de lado em ambiente de laboratório."
+          />
+          <figcaption>É famoso pela regeneração de membros e órgãos.</figcaption>
+        </figure>
+
+        <!-- as outras figuras base64 e imagem final do site mantidas -->
+        <!-- Figura 3 -->
+        <figure role="listitem">
+          <img
+            src="data:image/jpeg;base64,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"
+            alt="Axolote em tanque de observação, utilizado em estudos biológicos."
+          />
+          <figcaption>Respira pela pele, pulmões e brânquias externas.</figcaption>
+        </figure>
+
+        <!-- Figura 4 -->
+        <figure role="listitem">
+          <img
+            src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ7QMs03s5obaRHH7c4YSyLmceQ9ml2b-fk0A&s"
+          />
+          <figcaption>Pode ter variações de cor, inclusive leucístico (rosa claro).</figcaption>
+        </figure>
+
+        <!-- Imagem externa final -->
+        <figure role="listitem">
+          <img
+            src="https://super.abril.com.br/wp-content/uploads/2025/06/1106-axolotes-layout_site.jpg?quality=70&strip=info&resize=1080,565&crop=1"
+            alt="Grupo de axolotes nadando em ambiente controlado."
+          />
+          <figcaption>Permanece a maior parte da vida na água.</figcaption>
+        </figure>
+        <figure role="listitem">
+          <img
+            src="data:image/jpeg;base64,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"
+            alt="Axolote visto de frente, com brânquias externas bem visíveis."
+          />
+          <figcaption>Possui neotenia, mantendo brânquias na fase adulta.</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section id="faq" aria-labelledby="titulo-faq" class="fade-in">
+      <header>
+        <h2 id="titulo-faq">Perguntas Frequentes</h2>
+        <p>Respostas rápidas sobre os axolotes.</p>
+      </header>
+
+      <div class="faq">
+        <details>
+          <summary>Para que servem os axolotes?</summary>
+          <p>
+            Os axolotes são muito importantes para a ciência. Eles são usados como modelo de estudo em pesquisas
+            de regeneração de tecidos, medula espinhal, coração e até partes do cérebro, ajudando a entender
+            possíveis aplicações futuras na medicina humana.
+          </p>
+        </details>
+
+        <details>
+          <summary>Posso adotar um axolote?</summary>
+          <p>
+            Em alguns países, é possível ter axolotes em casa, seguindo regras de bem-estar e manejo adequado.
+            Porém, <strong>no Brasil</strong> a sua posse e comercialização são proibidas por lei, pois são
+            considerados animais exóticos ameaçados de extinção. Aqui, o ideal é conhecê-los em aquários,
+            zoológicos e materiais educativos.
+          </p>
+        </details>
+
+        <details>
+          <summary>Eles têm algum nome específico?</summary>
+          <p>
+            Sim. O nome científico é <em>Ambystoma mexicanum</em>, também chamado de salamandra mexicana.
+            A palavra “axolote” (ou “axolotl”) vem do náuatle, língua dos astecas, e significa algo como
+            “monstro da água” (atl = água, xolotl = monstro).
+          </p>
+        </details>
+
+        <details>
+          <summary>Onde eu encontro os axolotes?</summary>
+          <p>
+            Na natureza, os axolotes são encontrados apenas no sistema de canais do Lago Xochimilco, na Cidade
+            do México, um habitat bastante ameaçado. Fora de lá, podem ser vistos em alguns zoológicos e
+            aquários pelo mundo ou em laboratórios de pesquisa.
+          </p>
+        </details>
+
+        <details>
+          <summary>Há alguma recomendação importante sobre os axolotes?</summary>
+          <p>
+            A principal recomendação é respeitar a legislação ambiental: no Brasil, a posse e o comércio de
+            axolotes são ilegais. Como espécie criticamente ameaçada, o melhor que podemos fazer é apoiar
+            projetos de conservação e usar o conhecimento científico para proteger os ecossistemas.
+          </p>
+        </details>
+      </div>
+    </section>
+
+    <!-- CTA FINAL -->
+    <section id="cta-final" aria-labelledby="titulo-cta" class="fade-in">
+      <header>
+        <h2 id="titulo-cta">Continue explorando</h2>
+        <p>Escolha um caminho para aprender ainda mais.</p>
+      </header>
+
+      <div class="cta" role="group" aria-label="Call to Action">
+        <a href="#fatos">Aprender mais</a>
+        <a href="#galeria">Ver imagens</a>
+        <a href="#creditos">Baixar material &amp; ver fontes</a>
+      </div>
+    </section>
+
+    <!-- CRÉDITOS/FONTES -->
+    <section id="creditos" aria-labelledby="titulo-creditos" class="fade-in">
+      <header>
+        <h2 id="titulo-creditos">Créditos e Fontes</h2>
+        <p>Referências utilizadas neste projeto sobre os axolotes.</p>
+      </header>
+
+    </section>
+  </main>
+
+  <!-- Painel do Chatbot (Aside fixo) -->
+  <aside id="chatPane" role="complementary" aria-label="Painel do chatbot" aria-hidden="true">
+    <div class="chat-header">
+      <strong>Chatbot Muito Explicativo!!</strong>
+      <div>
+        <button id="closeChat" class="icon-btn" aria-label="Fechar chatbot">✖</button>
+      </div>
+    </div>
+
+    <div class="chat-body" id="chatHistory" aria-live="polite">
+      <div class="msg bot">
+        Olá! Sou um protótipo de chatbot para falar sobre os axolotes, esses anfíbios incríveis e ameaçados.
+        Como posso te ajudar?
+      </div>
+      <div class="msg user">Quero saber curiosidades rápidas.</div>
+      <div class="msg bot">Veja a seção “Curiosidades” ou pergunte algo específico!</div>
+    </div>
+
+    <form class="chat-input" id="chatForm" aria-label="Entrada de mensagem do chatbot">
+      <input id="chatText" type="text" name="q" placeholder="Digite sua mensagem..." aria-label="Escreva sua mensagem" />
+      <button class="icon-btn" type="submit" aria-label="Enviar mensagem">➤</button>
+    </form>
+  </aside>
+
+  <footer class="wrap" role="contentinfo">
+    <p>&copy; <span id="ano"></span> | Projeto: AXOLOTES — <a href="#topo" id="backToTop">Voltar ao topo</a></p>
+  </footer>
+
+  <script src="script.js"></script>
+  <script src="https://www.gstatic.com/dialogflow-console/fast/messenger/bootstrap.js?v=1"></script>
+  <df-messenger
+    intent="WELCOME"
+    chat-title="EcoBot"
+    agent-id="6c106d6c-eef7-41db-92b4-5bf82848937e"
+    language-code="pt-br"
+    session-id="dfMessenger-28421387"
+    api-uri="https://dialogflow.cloud.google.com/v1/integrations/messenger/webhook"
+    expand="">
+  </df-messenger>
+
+  <!-- Modal da câmera -->
+  <div id="cameraModal" class="modal" aria-hidden="true" style="display:none;">
+    <div class="modal-content">
+      <button id="fecharModal" class="botao-fechar" title="Fechar">❌</button>
+      <h2 class="modal-title">Reconhecimento Facial</h2>
+
+      <div class="video-wrap">
+        <video id="video" autoplay muted playsinline></video>
+      </div>
+
+      <div class="controls">
+        <button id="tirarFoto" class="botao-foto" title="Tirar foto">📸</button>
+      </div>
+
+      <p id="modalStatus" class="modal-status">Aguardando...</p>
+      <canvas id="fotoCanvas" style="display:none;"></canvas>
+    </div>
+  </div>
+</body>
+</html>
